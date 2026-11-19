@@ -4,31 +4,37 @@ from groq import Groq
 st.set_page_config(page_title="My AI Assistant", page_icon="🤖")
 st.title("🤖 My Personal AI")
 
-# Get Groq API key from Streamlit Secrets or sidebar input
+# Get Groq API key from Secrets or Sidebar
 api_key = st.secrets.get("GROQ_API_KEY", "")
 
-if not api_key:
-    with st.sidebar:
-        api_key = st.text_input("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", type="password")
+with st.sidebar:
+    if not api_key:
+        api_key = st.text_input("Enter your Groq API Key:", type="password")
+    
+    # Model selector with active Groq models
+    selected_model = st.selectbox(
+        "Choose AI Model:",
+        ["openai/gpt-oss-120b", "qwen/qwen3.8-27b", "openai/gpt-oss-20b"]
+    )
 
 if not api_key:
-    st.info("Please enter your Groq API Key in the sidebar or in Streamlit Secrets to begin chatting.")
+    st.info("👈 Please paste your Groq API Key in the sidebar to start chatting.")
 else:
     client = Groq(api_key=api_key)
 
-    # Initialize chat history with your custom personality
+    # Initialize chat history
     if "messages" not in st.session_state:
         st.session_state.messages = [
-            {"role": "system", "content": "You are a helpful, smart, and friendly personal AI assistant."}
+            {"role": "system", "content": "You are my dedicated, intelligent personal AI assistant."}
         ]
 
-    # Display past messages (excluding system prompt)
+    # Show chat messages
     for msg in st.session_state.messages:
         if msg["role"] != "system":
             with st.chat_message(msg["role"]):
                 st.write(msg["content"])
 
-    # Chat input box
+    # Chat input
     if prompt := st.chat_input("Ask anything..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
@@ -36,7 +42,7 @@ else:
 
         try:
             response = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model=selected_model,
                 messages=st.session_state.messages,
             )
             reply = response.choices[0].message.content
